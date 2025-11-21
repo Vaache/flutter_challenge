@@ -17,6 +17,21 @@ mixin _$AuthStore on _AuthStore, Store {
               name: '_AuthStore.isAuthenticated'))
           .value;
 
+  late final _$pageAtom = Atom(name: '_AuthStore.page', context: context);
+
+  @override
+  int get page {
+    _$pageAtom.reportRead();
+    return super.page;
+  }
+
+  @override
+  set page(int value) {
+    _$pageAtom.reportWrite(value, super.page, () {
+      super.page = value;
+    });
+  }
+
   late final _$isLoadingAtom =
       Atom(name: '_AuthStore.isLoading', context: context);
 
@@ -96,9 +111,24 @@ mixin _$AuthStore on _AuthStore, Store {
         .run(() => super.register(username, email, password));
   }
 
+  late final _$_AuthStoreActionController =
+      ActionController(name: '_AuthStore', context: context);
+
+  @override
+  void changePage(int changePage) {
+    final _$actionInfo =
+        _$_AuthStoreActionController.startAction(name: '_AuthStore.changePage');
+    try {
+      return super.changePage(changePage);
+    } finally {
+      _$_AuthStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
   @override
   String toString() {
     return '''
+page: ${page},
 isLoading: ${isLoading},
 token: ${token},
 user: ${user},

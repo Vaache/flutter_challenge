@@ -24,6 +24,9 @@ abstract class _AuthStore with Store {
   Future<void> _init() async {}
 
   @observable
+  int page = 0;
+
+  @observable
   bool isLoading = false;
 
   @observable
@@ -76,5 +79,10 @@ abstract class _AuthStore with Store {
     await _storage.setJson(currentUser.username, currentUser.toJson());
     isLoading = false;
     token = 'dummy_token_${Random().nextInt(10000)}';
+  }
+
+  @action
+  void changePage(int changePage) {
+    page = changePage;
   }
 }

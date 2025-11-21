@@ -12,11 +12,13 @@ class AppTextFormField extends StatelessWidget {
     this.hintText,
     this.controller,
     this.width,
+    this.obscureText = false,
   });
 
   final String? hintText;
   final TextEditingController? controller;
   final double? width;
+  final bool obscureText;
 
   @override
   Widget build(BuildContext context) {
@@ -26,10 +28,14 @@ class AppTextFormField extends StatelessWidget {
       width: width ?? context.screenSize.width * 0.8,
       child: TextFormField(
         controller: controller,
-        obscureText: false,
+        obscureText: obscureText,
         onTapOutside: (event) {
           FocusScope.of(context).unfocus();
         },
+        style: TextStyle(
+            color: themeMode == ThemeMode.dark
+                ? AppColorPallet.white
+                : AppColorPallet.black1),
         decoration: InputDecoration(
             hintText: hintText,
             hintStyle: TextStyle(
@@ -50,7 +56,6 @@ class AppTextFormField extends StatelessWidget {
                       ? AppColorPallet.purple1
                       : Colors.black),
             ),
-            
             contentPadding: (AppPaddings.verticalMd + AppPaddings.verticalSm) +
                 AppPaddings.horizontalLg),
       ),

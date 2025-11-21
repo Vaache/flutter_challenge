@@ -33,6 +33,7 @@ class _LoginPageState extends State<LoginPage> {
               AppTextFormField(
                 controller: widget.passwordController,
                 hintText: 'Password',
+                obscureText: true,
               ),
               SizedBox(height: context.screenSize.height * 0.03),
             ],

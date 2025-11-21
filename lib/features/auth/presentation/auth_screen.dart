@@ -4,6 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:m_one/core/constants/vectors.dart';
 import 'package:m_one/core/extension/build_context.dart';
 import 'package:m_one/core/providers/theme_provider.dart';
+import 'package:m_one/core/theme/app_color_pallet.dart';
 import 'package:m_one/core/theme/app_sizes.dart';
 import 'package:m_one/features/auth/presentation/stores/auth_store.dart';
 import 'package:m_one/features/auth/presentation/widgets/login_header_clipper.dart';
@@ -25,7 +26,6 @@ class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   AuthStore? _authStore;
-  int _page = 0;
 
   @override
   void initState() {
@@ -51,6 +51,14 @@ class _AuthScreenState extends State<AuthScreen> {
   Future<void> _onLoginPressedLogin() async {
     FocusScope.of(context).unfocus();
     if (_authStore == null) return;
+
+    if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
+      if (context.mounted && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Please enter username and password')));
+      }
+      return;
+    }
 
     try {
       await _authStore!.login(
@@ -82,6 +90,17 @@ class _AuthScreenState extends State<AuthScreen> {
   Future<void> _onLoginPressedSignUp() async {
     FocusScope.of(context).unfocus();
     if (_authStore == null) return;
+
+    if (_usernameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
+      if (context.mounted && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Please enter all required fields')));
+      }
+      return;
+    }
+
     try {
       await _authStore!.register(
         _usernameController.text.trim(),
@@ -110,6 +129,7 @@ class _AuthScreenState extends State<AuthScreen> {
     final screenHeight = context.screenSize.height;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         leading: GestureDetector(
             onTap: () => context.read<ThemeProvider>().toggleTheme(),
@@ -118,76 +138,104 @@ class _AuthScreenState extends State<AuthScreen> {
         automaticallyImplyLeading: false,
       ),
       backgroundColor: colorTheme.foregroundPrimaryColor,
-      body: Stack(
-        children: [
-          Align(
-            alignment: Alignment.topCenter,
-            child: ClipPath(
-              clipper: LoginHeaderClipper(),
-              child: Container(
-                height: screenHeight * 0.35,
-                color: colorTheme.backgroundPrimaryColor,
+      body: SafeArea(
+        bottom: true,
+        child: Stack(
+          children: [
+            Align(
+              alignment: Alignment.topCenter,
+              child: ClipPath(
+                clipper: LoginHeaderClipper(),
+                child: Container(
+                  height: screenHeight * 0.35,
+                  color: colorTheme.backgroundPrimaryColor,
+                ),
               ),
             ),
-          ),
-          Positioned(
-            top: context.screenSize.height * 0.4,
-            left: 0,
-            right: 0,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Observer(builder: (_) {
-                  return AnimatedContainer(
-                    padding: EdgeInsets.zero,
-                    curve: Curves.easeInOut,
-                    duration: const Duration(milliseconds: 400),
-                    height: 180,
-                    child: _authStore!.isLoading
-                        ? CircularProgressIndicator()
-                        : PageView(
-                            controller: _pageController,
-                            physics: const NeverScrollableScrollPhysics(),
-                            children: [
-                              LoginPage(
-                                userNameController: _usernameController,
-                                passwordController: _passwordController,
-                              ),
-                              SignInPage(
-                                userNameController: _usernameController,
-                                emailController: _emailController,
-                                passwordController: _passwordController,
-                              ),
-                            ],
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Observer(builder: (_) {
+                    return AnimatedContainer(
+                      padding: EdgeInsets.zero,
+                      curve: Curves.easeInOut,
+                      duration: const Duration(milliseconds: 400),
+                      height: 180,
+                      child: PageView(
+                        controller: _pageController,
+                        physics: const NeverScrollableScrollPhysics(),
+                        onPageChanged: (value) => onAnimated(value),
+                        children: [
+                          LoginPage(
+                            userNameController: _usernameController,
+                            passwordController: _passwordController,
                           ),
-                  );
-                }),
-                const SizedBox(height: AppSizes.xxl),
-                Observer(builder: (_) {
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    child: _authStore!.isLoading
-                        ? CircularProgressIndicator()
-                        : LoginSingUpButton(
-                            pageController: _pageController,
-                            currentPage: _page,
-                            onLongPressLogin: _onLoginPressedLogin,
-                            onLongPressSignUp: _onLoginPressedSignUp,
-                            onAnimated: (int page) {
-                              setState(() {
-                                _page = page;
-                              });
-                              clearControllers();
-                            },
+                          SignInPage(
+                            userNameController: _usernameController,
+                            emailController: _emailController,
+                            passwordController: _passwordController,
                           ),
-                  );
-                }),
-              ],
+                        ],
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: AppSizes.xxl),
+                  Observer(builder: (_) {
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      child: LoginSingUpButton(
+                              pageController: _pageController,
+                              currentPage: _authStore!.page,
+                              onLongPressLogin: () {
+                                if (_authStore!.page != 0) {
+                                  _pageController.animateToPage(0,
+                                      duration:
+                                          const Duration(milliseconds: 500),
+                                      curve: Curves.easeInOut);
+                                  onAnimated(0);
+                                }
+
+                                _onLoginPressedLogin();
+                              },
+                              onLongPressSignUp: () {
+                                if (_authStore!.page != 1) {
+                                  _pageController.animateToPage(1,
+                                      duration:
+                                          const Duration(milliseconds: 500),
+                                      curve: Curves.easeInOut);
+                                  onAnimated(1);
+                                }
+                                _onLoginPressedSignUp();
+                              },
+                              onAnimated: onAnimated,
+                            ),
+                    );
+                  }),
+                  SizedBox(height: AppSizes.md),
+                  TextButton(
+                      onPressed: () {},
+                      child: Text(
+                        'Forgot Password?',
+                        style: context.read<ThemeProvider>().themeMode ==
+                                ThemeMode.dark
+                            ? context.textTheme.description
+                            : context.textTheme.description
+                                .copyWith(color: AppColorPallet.purple1),
+                      ))
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  void onAnimated(int page) {
+    if (_authStore!.page == page) return;
+    _authStore!.changePage(page);
+    clearControllers();
   }
 
   void clearControllers() {

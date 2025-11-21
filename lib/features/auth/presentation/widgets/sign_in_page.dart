@@ -30,6 +30,7 @@ class _SignInPageState extends State<SignInPage> {
           child: Column(
             children: [
               AppTextFormField(
+                
                   controller: widget.emailController, hintText: 'Email'),
               SizedBox(height: context.screenSize.height * 0.01),
               AppTextFormField(
@@ -38,6 +39,7 @@ class _SignInPageState extends State<SignInPage> {
               AppTextFormField(
                 controller: widget.passwordController,
                 hintText: 'Password',
+                obscureText: true,
               ),
             ],
           ),
